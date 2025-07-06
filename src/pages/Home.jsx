@@ -144,6 +144,8 @@ function Home() {
     [fetchWithCache]
   );
 
+
+  
   const handleRowClick = (launch) => {
     setIsLaunchModalOpen(true);
     fetchLaunchDetails(launch.id);
