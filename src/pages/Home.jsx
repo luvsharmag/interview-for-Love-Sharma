@@ -1,53 +1,22 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
+
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, subMonths, subYears } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import DatePicker from "react-datepicker";
+
 import "react-datepicker/dist/react-datepicker.css";
 import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Filter,
-  X,
-  Youtube,
-  Globe,
-} from "lucide-react";
+import { Calendar, ChevronDown, Filter } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DateFilterModal } from "@/components/Filters/DateFilterModal";
 import { LaunchTable } from "@/components/LaunchTable/LaunchTable";
 import { LaunchModalContent } from "@/components/LaunchModal/LaunchModalContent";
+import CommonPagination from "@/components/common/CommonPagination.jsx";
 
 function Home() {
   const [launches, setLaunches] = useState([]);
@@ -60,7 +29,7 @@ function Home() {
   const [quickFilter, setQuickFilter] = useState("");
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedLaunch, setSelectedLaunch] = useState(null);
+
   const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
   const [launchDetails, setLaunchDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -176,7 +145,6 @@ function Home() {
   );
 
   const handleRowClick = (launch) => {
-    setSelectedLaunch(launch);
     setIsLaunchModalOpen(true);
     fetchLaunchDetails(launch.id);
   };
@@ -250,30 +218,6 @@ function Home() {
   );
   const totalPages = Math.ceil(filteredLaunches.length / launchesPerPage);
 
-  // Change page
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-
-  // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return format(date, "d MMMM yyyy 'at' HH:mm");
-  };
-
-  // Get status badge
-  const getStatusBadge = (launch) => {
-    if (launch?.upcoming) {
-      return <Badge className="bg-[#FEF3C7] text-[#92400F]">Upcoming</Badge>;
-    }
-    return launch?.success ? (
-      <Badge className="bg-[#DEF7EC] text-[#03543F]">Success</Badge>
-    ) : (
-      <Badge className="bg-[#FDE2E1] text-[#981B1C]">Failed</Badge>
-    );
-  };
-
   // Get quick filter label
   const getQuickFilterLabel = () => {
     switch (quickFilter) {
@@ -310,50 +254,6 @@ function Home() {
     }
   };
 
-  // Generate page numbers with ellipsis logic
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-
-    // Always show first page
-    pages.push(1);
-
-    // Calculate range of pages to show
-    let start = Math.max(2, currentPage - 2);
-    let end = Math.min(totalPages - 1, currentPage + 2);
-
-    // Adjust if we're near the start or end
-    if (currentPage <= 3) {
-      end = Math.min(5, totalPages - 1);
-    } else if (currentPage >= totalPages - 2) {
-      start = Math.max(totalPages - 4, 2);
-    }
-
-    // Add ellipsis if needed
-    if (start > 2) {
-      pages.push("...");
-    }
-
-    // Add middle pages
-    for (let i = start; i <= end; i++) {
-      if (i > 1 && i < totalPages) {
-        pages.push(i);
-      }
-    }
-
-    // Add ellipsis if needed
-    if (end < totalPages - 1) {
-      pages.push("...");
-    }
-
-    // Always show last page if there is more than one page
-    if (totalPages > 1) {
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
-
   return (
     <div className="min-h-screen bg-white-50">
       {/* Navbar */}
@@ -382,7 +282,7 @@ function Home() {
               </DropdownMenuTrigger>
             </DropdownMenu>
           </div>
-           <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="pl-3">
@@ -415,7 +315,6 @@ function Home() {
             quickFilter={quickFilter}
             setQuickFilter={setQuickFilter}
           />
-         
         </div>
 
         {loading ? (
@@ -429,55 +328,26 @@ function Home() {
         ) : (
           <div className="flex flex-col">
             {/* Table with side margins */}
-              <LaunchTable 
-              launches={currentLaunches} 
+            <LaunchTable
+              launches={currentLaunches}
               handleRowClick={handleRowClick}
               loading={loading}
             />
             {/* Pagination */}
             {filteredLaunches.length > 0 && (
-              <div className="mt-6 mx-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-
-                    {getPageNumbers().map((pageNum, index) => (
-                      <PaginationItem key={index}>
-                        {pageNum === "..." ? (
-                          <PaginationEllipsis />
-                        ) : (
-                          <PaginationLink
-                            isActive={currentPage === pageNum}
-                            onClick={() => paginate(pageNum)}
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        )}
-                      </PaginationItem>
-                    ))}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={nextPage}
-                        disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
+              <CommonPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+              />
             )}
           </div>
         )}
         <Dialog open={isLaunchModalOpen} onOpenChange={setIsLaunchModalOpen}>
           <DialogContent className="max-w-l p-0 border-0 max-h-[90vh] overflow-y-auto">
-          <LaunchModalContent 
-              launchDetails={launchDetails} 
-              loadingDetails={loadingDetails} 
+            <LaunchModalContent
+              launchDetails={launchDetails}
+              loadingDetails={loadingDetails}
             />
           </DialogContent>
         </Dialog>
