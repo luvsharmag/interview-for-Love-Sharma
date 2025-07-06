@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 export const DateFilterModal = ({ 
   isOpen, 
   onClose, 
@@ -16,20 +14,39 @@ export const DateFilterModal = ({
   setQuickFilter 
 }) => {
   const [startDate, endDate] = dateRange;
+  const [activeView, setActiveView] = useState("quick"); // 'quick' or 'custom'
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] md:max-w-4xl">
-        <div className="flex flex-col md:flex-row">
+      <DialogContent className="max-w-[95vw] w-[90vw] h-[80vh] max-h-[600px] md:h-auto md:max-w-4xl overflow-y-auto">
+        {/* Mobile Toggle */}
+        <div className="md:hidden flex border-b mb-4">
+          <Button
+            variant="ghost"
+            className={`flex-1 rounded-none border-b-2 ${activeView === 'quick' ? 'border-primary' : 'border-transparent'}`}
+            onClick={() => setActiveView('quick')}
+          >
+            Quick Select
+          </Button>
+          <Button
+            variant="ghost"
+            className={`flex-1 rounded-none border-b-2 ${activeView === 'custom' ? 'border-primary' : 'border-transparent'}`}
+            onClick={() => setActiveView('custom')}
+          >
+            Date Range
+          </Button>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 h-full">
           {/* Quick Select Column */}
-          <div className="w-full md:w-1/3 pr-0 md:pr-4 border-b md:border-b-0 md:border-r pb-4 md:pb-0">
-            <h3 className="font-semibold mb-4">Quick Select</h3>
-            <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+          <div className={`${activeView === 'quick' ? 'block' : 'hidden'} md:block w-full md:w-1/3`}>
+            <h3 className="font-semibold mb-3 hidden md:block">Quick Select</h3>
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-2 h-full overflow-y-auto md:overflow-visible">
               {['week', 'month', '3months', '6months', 'year', '2years'].map((filter) => (
                 <Button
                   key={filter}
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-sm py-2 h-auto min-h-[40px]"
                   onClick={() => {
                     setQuickFilter(filter);
                     setDateRange([null, null]);
@@ -43,48 +60,51 @@ export const DateFilterModal = ({
           </div>
 
           {/* Date Range Pickers */}
-          <div className="w-full md:w-2/3 pl-0 md:pl-4 pt-4 md:pt-0">
-            <h3 className="font-semibold mb-4">Date Range</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Start Date</label>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date) => setDateRange([date, endDate])}
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  inline
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  calendarClassName="border rounded-md shadow"
-                  className="hidden"
-                />
+          <div className={`${activeView === 'custom' ? 'block' : 'hidden'} md:block w-full md:w-2/3`}>
+            <h3 className="font-semibold mb-3 hidden md:block">Date Range</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full overflow-y-auto md:overflow-visible">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Start Date</label>
+                <div className="border rounded-md p-2">
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date) => setDateRange([date, endDate])}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    inline
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    calendarClassName="!border-0 !shadow-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">End Date</label>
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date) => setDateRange([startDate, date])}
-                  selectsEnd
-                  startDate={startDate}
-                  endDate={endDate}
-                  minDate={startDate}
-                  inline
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  calendarClassName="border rounded-md shadow"
-                  className="hidden"
-                />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">End Date</label>
+                <div className="border rounded-md p-2">
+                  <DatePicker
+                    selected={endDate}
+                    onChange={(date) => setDateRange([startDate, date])}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    inline
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    calendarClassName="!border-0 !shadow-none"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-2 pt-4 sticky bottom-0 bg-background">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setDateRange([null, null]);
                   setQuickFilter(null);
@@ -93,6 +113,7 @@ export const DateFilterModal = ({
                 Clear
               </Button>
               <Button
+                size="sm"
                 onClick={() => {
                   setQuickFilter(null);
                   onClose(false);
